@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Game</title>
+    <style>
+      html, body {
+        margin: 0px;
+        padding: 0px;
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      body {
+        display: flex;
+        flex-direction: row;
+      }
+      #glCanvas {
+        flex: 1 1 1;
+        align-self: stretch;
+      }
+      #sidebar {
+        flex: 1 0 1;
+        height: 100%;
+        width: 30%;
+        align-self: flex-end;
+        overflow-y: scroll;
+        display: block;
+      }
+      #handle {
+        align-self: center;
+        width: 20px;
+        height: 100%;
+        flex: 0 0 20px;
+        height: calc("100% - 50px");
+        background: #ddd;
+        cursor: ew-resize;
+      }
+      .console {
+        overflow-y: scroll;
+        margin: 5px;
+        height: 30%;
+        border: solid 1px black;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+  </head>
+  <body>
+    <canvas id='glCanvas' width="800" height="600"></canvas>
+    <div id='handle'></div>
+    <div id='sidebar'>
+      <h1>Tools n stuff</h1>
+      <button v-on:click='logout'>Logout</button>
+      <p>FPS: {{ FPS }}</p>
+      <p>AVG FPS: {{ avgFPS }}</p>
+      <h3>Event Log</h3>
+      <pre class='console' id='event-log'>{{ eventLog }}</pre>
+      <h3>Console</h3>
+      <pre class='console' id='console-log'>{{ consoleLog }}</pre>
+    </div>
+    <script>
+
+      var canvas = document.querySelector("#glCanvas");;
+      var gl = canvas.getContext("webgl2");
+
+      function handleMouseMove(ev, handler) {
+        var offset = ev.pageX;
+        if (offset > window.innerWidth - 20)
+          offset = window.innerWidth - 20;
+        document.getElementById('glCanvas').width = offset;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        document.querySelector('#sidebar').style.marginLeft = offset + 20;
+      }
+
+      document.querySelector('#handle').addEventListener('mousedown', (function(ev, handler) {
+        document.addEventListener('mousemove', handleMouseMove);
+      }));
+
+      document.addEventListener('mouseup', (function(e) {
+        document.removeEventListener('mousemove', handleMouseMove, false);
+      }));
+
+      
+
+      var vm = new Vue({
+        el: '#sidebar',
+        data: {
+          consoleLog: '',
+          consoleLineNum: 0,
+          eventLog: '',
+          eventLineNum: 0,
+          FPS: 0,
+          avgFPS: 0
+        },
+        methods: {
+          log(value) {
+            this.consoleLog += `\r\n ${this.lineNum} | ${value}`;
+            this.consoleLineNum++;
+            this.$nextTick(function() {
+              const sidebar = document.getElementById('event-log');   
+              sidebar.scrollTop = sidebar.scrollHeight;
+            });
+          },
+          logEvent(value) {
+            this.eventLog += `\r\n ${this.eventLineNum} | ${value}`;
+            this.eventLineNum++;
+            this.$nextTick(function() {
+              const sidebar = document.getElementById('console-log');   
+              sidebar.scrollTop = sidebar.scrollHeight;
+            });
+          },
+          setAvgFPS(value) {
+            this.avgFPS = value;
+          },
+          setFPS(value) {
+            this.FPS = value;
+          },
+          logout() {
+            console.log('logout');
+            window.location.href = '/logout';
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
